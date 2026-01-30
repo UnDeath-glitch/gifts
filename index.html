@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>World of Love 💜 Yue</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+body{
+  margin:0;
+  min-height:100vh;
+  overflow:hidden;
+  font-family:'Arial',sans-serif;
+  transition:0.6s;
+  background:linear-gradient(135deg,#ffe6f0,#f8c8dc);
+}
+
+body.night{
+  background:#0a001f;
+  color:#c77dff;
+}
+
+.card{
+  max-width:420px;
+  width:100%;
+  border-radius:1.25rem;
+  z-index:5;
+  transition:0.3s;
+}
+
+body.night .card{
+  background:#111;
+  color:#c77dff;
+  border:1px solid #7b2cbf;
+}
+
+textarea{resize:none;}
+.page{display:none;animation:fade .6s ease;}
+.page.active{display:block;}
+@keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1}}
+
+.heart{
+  position:fixed;
+  bottom:-20px;
+  font-size:20px;
+  animation:float 8s linear forwards;
+  z-index:1;
+}
+@keyframes float{
+  to{transform:translateY(-110vh) scale(1.5);opacity:0}
+}
+
+/* Fireworks canvas */
+#fireworks{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:20;
+  display:none;
+}
+
+/* Chat bubbles */
+.bubble{
+  max-width:80%;
+  padding:6px 12px;
+  border-radius:20px;
+  margin:4px 0;
+  display:inline-block;
+  word-wrap:break-word;
+  font-size:0.95rem;
+  line-height:1.2;
+}
+
+.bubble.aflu{
+  background:#c77dff;
+  color:#fff;
+  align-self:flex-start;
+}
+
+.bubble.yue{
+  background:#ff90b3;
+  color:#fff;
+  align-self:flex-end;
+}
+
+.chat-window{
+  display:flex;
+  flex-direction:column;
+  height:150px;
+  overflow-y:auto;
+  margin-bottom:8px;
+  padding:4px;
+  border:1px solid #ccc;
+  border-radius:12px;
+  background:#fff;
+}
+
+body.night .chat-window{
+  background:#111;
+  border:1px solid #7b2cbf;
+}
+
+canvas#draw{
+  border:1px solid #ccc;
+  border-radius:12px;
+  cursor:crosshair;
+}
+</style>
+</head>
+
+<body class="d-flex align-items-center justify-content-center min-vh-100">
+
+<!-- PAGE 0: NAME ENTRY -->
+<div class="card p-4 text-center page active" id="p0">
+<h2>👋 Welcome!</h2>
+<p>Enter your name:</p>
+<input type="text" id="userName" class="form-control mb-3" placeholder="Your Name...">
+<button class="btn btn-primary" id="startBtn">Start</button>
+</div>
+
+<!-- PAGE 1 -->
+<div class="card p-4 text-center page" id="p1">
+<h2 id="welcomeMsg">💜 World of Love</h2>
+<textarea id="msg" class="form-control mt-3" rows="4" placeholder="Type your secret message..."></textarea>
+<div class="d-flex justify-content-between mt-3">
+<button id="nightBtn" class="btn btn-dark">🌙</button>
+<button class="btn btn-primary" onclick="go(2)">➡️</button>
+</div>
+</div>
+
+<!-- PAGE 2: SPECIAL NOTE -->
+<div class="card p-4 text-center page" id="p2">
+<h3>💌 Special Note</h3>
+<p>
+Yue, you are the most perfect lady in this whole Altarca.  
+If love had a signature, it would be your name.
+</p>
+<div class="d-flex justify-content-between">
+<button class="btn btn-secondary" onclick="go(1)">⬅️</button>
+<button class="btn btn-primary" onclick="go(3)">➡️</button>
+</div>
+</div>
+
+<!-- PAGE 3: CHAT -->
+<div class="card p-4 page" id="p3">
+<h4 class="text-center">💬 Our Chat</h4>
+<div class="chat-window" id="chatWindow"></div>
+<label class="mt-2" id="afluLabel">Aflu</label>
+<textarea id="aflu" class="form-control" rows="2" placeholder="Type as Aflu..."></textarea>
+<label class="mt-2" id="yueLabel">Yue</label>
+<textarea id="yue" class="form-control" rows="2" placeholder="Type as Yue..."></textarea>
+<div class="d-flex justify-content-between mt-3">
+<button class="btn btn-secondary" onclick="go(2)">⬅️</button>
+<button class="btn btn-primary" onclick="go(4)">➡️</button>
+</div>
+</div>
+
+<!-- PAGE 4: DRAW -->
+<div class="card p-4 text-center page" id="p4">
+<h4>Draw a Heart ❤️</h4>
+<canvas id="draw" width="300" height="300"></canvas>
+<div id="ringBox" style="font-size:80px;cursor:pointer;display:none">🎁</div>
+<div id="ring" style="font-size:80px;display:none">💍</div>
+<button class="btn btn-secondary mt-3" onclick="go(3)">⬅️</button>
+</div>
+
+<!-- PAGE 5: FIREWORKS -->
+<div class="card p-4 text-center page" id="p5">
+<h3>🎆 Surprise</h3>
+<p>Love explodes into forever</p>
+<button class="btn btn-primary" onclick="startFireworks()">🎆</button>
+<button class="btn btn-secondary mt-2" onclick="go(1)">🏠 Back</button>
+<button class="btn btn-danger mt-2" onclick="go(6)">❤️ End</button>
+</div>
+
+<!-- PAGE 6: FOREVER -->
+<div class="card p-4 text-center page" id="p6">
+<h2>💜 Forever</h2>
+<p>This world ends here, but our love doesn’t.</p>
+<button class="btn btn-success" onclick="showLove()">💖</button>
+<button class="btn btn-secondary mt-2" onclick="go(1)">🏠 Back to Main</button>
+</div>
+
+<canvas id="fireworks"></canvas>
+
+<!-- LOVE MODAL -->
+<div class="modal fade" id="loveModal">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content text-center p-4" id="loveModalContent">
+      <h2 id="loveText">❤️ I Love You, Yue ❤️</h2>
+      <button type="button" class="btn btn-primary mt-3" data-bs-dismiss="modal">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDjtRpC4CDPCpP5nPiIOvOh5Oc4YI-5MLs",
+  authDomain: "world-of-love-yue.firebaseapp.com",
+  projectId: "world-of-love-yue",
+  storageBucket: "world-of-love-yue.firebasestorage.app",
+  messagingSenderId: "917167414102",
+  appId: "1:917167414102:web:bbaf73911d74756f3354f7",
+  measurementId: "G-6V3FR34FMY"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const ref = db.collection("love").doc("main");
+const chat = db.collection("love").doc("chat");
+
+const msg = document.getElementById("msg");
+const aflu = document.getElementById("aflu");
+const yue = document.getElementById("yue");
+const chatWindow = document.getElementById("chatWindow");
+const userNameInput = document.getElementById("userName");
+let currentUser = "";
+
+// PAGE 0: NAME ENTRY
+document.getElementById("startBtn").onclick = () => {
+  currentUser = userNameInput.value.trim().toLowerCase();
+  if(!currentUser) return alert("Enter your name first!");
+  go(1);
+  document.getElementById("welcomeMsg").innerText = `💜 World of Love, ${userNameInput.value}`;
+  // Chat input restrictions
+  if(currentUser === "yue"){
+    aflu.disabled = true;
+  } else if(currentUser === "aflu"){
+    yue.disabled = true;
+  }
+};
+
+// Page navigation
+function go(n){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById("p"+n).classList.add("active");
+}
+
+// Night mode
+const nightBtn = document.getElementById("nightBtn");
+nightBtn.onclick = () => document.body.classList.toggle("night");
+
+// Floating hearts
+setInterval(()=>{
+  let h=document.createElement("div");
+  h.className="heart";
+  h.innerText="❤️";
+  h.style.left=Math.random()*100+"vw";
+  if(document.body.classList.contains("night")) h.style.color="#9d4edd";
+  document.body.appendChild(h);
+  setTimeout(()=>h.remove(),8000);
+},700);
+
+// Live messages
+ref.onSnapshot(d => { if(d.exists && msg.value !== d.data().m) msg.value=d.data().m });
+msg.oninput = ()=>ref.set({m: msg.value});
+
+// Chat with bubbles
+chat.onSnapshot(d=>{
+  if(!d.exists) return;
+  chatWindow.innerHTML="";
+  if(d.data().a) appendBubble("aflu", d.data().a);
+  if(d.data().y) appendBubble("yue", d.data().y);
+  aflu.value = d.data().a || "";
+  yue.value = d.data().y || "";
+});
+aflu.oninput = ()=>chat.set({a: aflu.value, y: yue.value});
+yue.oninput = ()=>chat.set({a: aflu.value, y: yue.value});
+
+function appendBubble(user, text){
+  let b=document.createElement("div");
+  b.className="bubble "+user;
+  b.innerText=text;
+  chatWindow.appendChild(b);
+  chatWindow.scrollTop=chatWindow.scrollHeight;
+}
+
+// Draw hearts
+const c = document.getElementById("draw"), x=c.getContext("2d");
+let draw=false;
+c.onmousedown=()=>draw=true;
+c.onmouseup=()=>{ draw=false; ringBox.style.display="block"; };
+c.onmousemove=e=>{
+  if(!draw) return;
+  x.fillStyle="red";
+  x.beginPath();
+  x.arc(e.offsetX,e.offsetY,4,0,Math.PI*2);
+  x.fill();
+};
+const ringBox=document.getElementById("ringBox");
+const ring=document.getElementById("ring");
+ringBox.onclick=()=>{
+  ringBox.style.display="none";
+  ring.style.display="block";
+  setTimeout(()=>go(5),1500);
+};
+
+// Fireworks with hearts
+function startFireworks(){
+  const f=document.getElementById("fireworks");
+  f.style.display="block";
+  const ctx=f.getContext("2d");
+  f.width=innerWidth; f.height=innerHeight;
+  let p=[];
+  for(let i=0;i<300;i++)
+    p.push({x:f.width/2, y:f.height/2, vx:(Math.random()-0.5)*8, vy:(Math.random()-0.5)*8, l:120, c:`hsl(${Math.random()*360},100%,70%)`});
+  let t=setInterval(()=>{
+    ctx.clearRect(0,0,f.width,f.height);
+    p.forEach(o=>{
+      ctx.fillStyle=o.c;
+      ctx.fillRect(o.x,o.y,3,3);
+      if(Math.random()<0.02){ // small heart particles
+        ctx.fillStyle="pink";
+        ctx.font="16px Arial";
+        ctx.fillText("❤️", o.x, o.y);
+      }
+      o.x+=o.vx; o.y+=o.vy; o.l--;
+    });
+    p=p.filter(o=>o.l>0);
+    if(!p.length){clearInterval(t); f.style.display="none";}
+  },30);
+}
+
+// I Love You popup
+function showLove(){
+  const modalEl=document.getElementById("loveModal");
+  const modal=new bootstrap.Modal(modalEl);
+  modal.show();
+  // Darken modal background dynamically
+  document.getElementById("loveModalContent").style.background="#111";
+  document.getElementById("loveText").style.color="#ff90b3";
+}
+</script>
+
+</body>
+</html>
