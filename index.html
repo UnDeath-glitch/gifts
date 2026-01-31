@@ -261,19 +261,49 @@ setInterval(()=>{
 
 // Live messages
 ref.onSnapshot(d => { if(d.exists && msg.value !== d.data().m) msg.value=d.data().m });
-msg.oninput = ()=>ref.set({m: msg.value});
+msg.oninput = ()=>{
+  if(currentUser !== "aflu") return;
+  ref.set({ m: msg.value });
+};
 
-// Chat with bubbles
-chat.onSnapshot(d=>{
+// 🔥 OUR CHAT – real messages, send on Enter
+chat.onSnapshot(d => {
   if(!d.exists) return;
-  chatWindow.innerHTML="";
-  if(d.data().a) appendBubble("aflu", d.data().a);
-  if(d.data().y) appendBubble("yue", d.data().y);
-  aflu.value = d.data().a || "";
-  yue.value = d.data().y || "";
+  chatWindow.innerHTML = "";
+
+  const messages = d.data().messages || [];
+  messages.forEach(m => appendBubble(m.user, m.text));
 });
-aflu.oninput = ()=>chat.set({a: aflu.value, y: yue.value});
-yue.oninput = ()=>chat.set({a: aflu.value, y: yue.value});
+
+// send message function
+function sendMessage(user, text){
+  if(!text.trim()) return;
+
+  chat.update({
+    messages: firebase.firestore.FieldValue.arrayUnion({
+      user: user,
+      text: text,
+      time: Date.now()
+    })
+  });
+}
+
+// Enter key handlers
+aflu.addEventListener("keydown", e => {
+  if(e.key === "Enter"){
+    e.preventDefault();
+    sendMessage("aflu", aflu.value);
+    aflu.value = "";
+  }
+});
+
+yue.addEventListener("keydown", e => {
+  if(e.key === "Enter"){
+    e.preventDefault();
+    sendMessage("yue", yue.value);
+    yue.value = "";
+  }
+});
 
 function appendBubble(user, text){
   let b=document.createElement("div");
